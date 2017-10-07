@@ -1,5 +1,6 @@
 
 import sys, codecs, optparse, os
+import math
 
 optparser = optparse.OptionParser()
 optparser.add_option("-c", "--unigramcounts", dest='counts1w', default=os.path.join('data', 'count_1w.txt'), help="unigram counts")
@@ -156,7 +157,7 @@ with open(opts.input) as f:
 					break
 				temp = temp + i
 				if (Pw(temp) != None):
-					heap1.insert(temp,0,Pw(temp),None)
+					heap1.insert(temp,0,math.log(Pw(temp)),None)
 			while(heap1.size > 0):							#While heap is nonempty
 				newword = ""
 				count = 0
@@ -180,7 +181,7 @@ with open(opts.input) as f:
 						#print("Newword in for loop: " + newword)
 						#print("Endindex in for loop :"+ str(endindex))
 						#print(heap1.size)
-						heap1.insert(newword,entry.pos + endindex,entry.prob + Pw(newword), entry)
+						heap1.insert(newword,entry.pos + endindex,entry.prob + math.log(Pw(newword)), entry)
 						#print(heap1.size)
 			
 				del entry

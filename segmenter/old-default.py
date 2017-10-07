@@ -1,10 +1,11 @@
 
 import sys, codecs, optparse, os
+import math
 
 optparser = optparse.OptionParser()
 optparser.add_option("-c", "--unigramcounts", dest='counts1w', default=os.path.join('data', 'count_1w.txt'), help="unigram counts")
 optparser.add_option("-b", "--bigramcounts", dest='counts2w', default=os.path.join('data', 'count_2w.txt'), help="bigram counts")
-optparser.add_option("-i", "--inputfile", dest="input", default=os.path.join('data', 'input'), help="input file to segment")
+optparser.add_option("-i", "--inputfile", dest="newinput", default=os.path.join('data', 'newinput'), help="input file to segment")
 (opts, _) = optparser.parse_args()
 
 class Pdist(dict):
@@ -112,7 +113,7 @@ comma = unicode(",", 'utf-8')
 old = sys.stdout
 sys.stdout = codecs.lookup('utf-8')[-1](sys.stdout)
 # ignoring the dictionary provided in opts.counts
-with open(opts.input) as f:
+with open(opts.newinput) as f:
     for  line in f:
 		heap1 = Heap_Im()
 		utf8line = unicode(line.strip(), 'utf-8')
@@ -129,7 +130,7 @@ with open(opts.input) as f:
 				break
 			temp = temp + i
 			if (Pw(temp) != None):
-				heap1.insert(temp,0,Pw(temp),None)
+				heap1.insert(temp,0,math.log(Pw(temp)),None)
 		while(heap1.size > 0):							#While heap is nonempty
 			newword = ""
 			count = 0
@@ -153,7 +154,7 @@ with open(opts.input) as f:
 					#print("Newword in for loop: " + newword)
 					#print("Endindex in for loop :"+ str(endindex))
 					#print(heap1.size)
-					heap1.insert(newword,entry.pos + endindex,entry.prob + Pw(newword), entry)
+					heap1.insert(newword,entry.pos + endindex,entry.prob + math.log(Pw(newword)), entry)
 					#print(heap1.size)
 			
 			del entry
