@@ -1,3 +1,6 @@
+#Bryce Golamco
+#bgolamco@sfu.ca
+
 
 import sys, codecs, optparse, os
 import math
@@ -15,6 +18,7 @@ class Pdist(dict):
         self.maxlen = 0 
         for line in file(filename):
             (key, freq) = line.split(sep)
+
             try:
                 utf8key = unicode(key, 'utf-8')
             except:
@@ -28,6 +32,7 @@ class Pdist(dict):
 	def insert1(self, filename, sep='\t', N=None, missingfn=None):
 		for line in file(filename):
 			(key, freq) = line.split(sep)
+
 			try:
 				utf8key = unicode(key, 'utf-8')
 			except:
@@ -39,11 +44,10 @@ class Pdist(dict):
 
     def __call__(self, key):
         if key in self: return float(self[key])/float(self.N)
-        #else: return self.missingfn(key, self.N)
         elif len(key) == 1: return self.missingfn(key, self.N)
         else: return None
 
-class Heap_Im:
+class Heap_Im: 		#Heap to store that values of the entries
 	def __init__(self):
 		self.size = 0
 		self.array_size = 0
@@ -118,7 +122,7 @@ class Node:
 Pw  = Pdist(opts.counts1w)
 
 
-max_size_line = 30
+max_size_line = 30 	#Sets the maximum characters in a line (This is differnt from maxlen of an entry)
 
 
 old = sys.stdout
@@ -133,7 +137,7 @@ with open(opts.input) as f:
 		newline = []
 	
 		line_count1 = 0
-		while(line_size > max_size_line):
+		while(line_size > max_size_line):		#This loop segments the line to a maximum of 30 characters, If a line has more than 30 characters it treats that line as more than 1 line depending on the number of characters. This is done so that the program will be able to run in less than a minute
 			x = i[line_count1*max_size_line:(line_count1+1)*max_size_line]
 			newline = newline + [x]
 			line_size = len(i[(line_count1+1)*max_size_line:])
@@ -149,22 +153,20 @@ with open(opts.input) as f:
 			temp = ""
 			chart = []
 			count = 0
-			for i in output:			
-				chart = chart + [None]						#Initializing the chart
-			for i in output:
+			for i in output:							#This initializes the chart 
+				chart = chart + [None]
+			for i in output:							
 				count += 1
 				if count > Pw.maxlen:
 					break
 				temp = temp + i
 				if (Pw(temp) != None):
-					heap1.insert(temp,0,math.log(Pw(temp)),None)
-			while(heap1.size > 0):							#While heap is nonempty
+					heap1.insert(temp,0,math.log10(Pw(temp)),None)	#Inserts values into the chart
+			while(heap1.size > 0):							#While heap is nonempty cycle through checking the chart if the chart have a bigger probability. Otherwise, the new probability will be changed to the current one.
 				newword = ""
 				count = 0
 				entry = heap1.remove_max()
 				endindex = len(entry.word)
-				#print("Word: " + entry.word)
-				#print("Position: " + str(entry.pos))
 				if(chart[entry.pos + endindex-1] != None):
 					if(entry.prob > chart[entry.pos + endindex-1].prob):
 						chart[entry.pos + endindex-1] = entry
@@ -176,20 +178,15 @@ with open(opts.input) as f:
 					if(count > Pw.maxlen):	
 						break
 					newword = newword + i
-					#print(newword)
 					if(Pw(newword) != None):
-						#print("Newword in for loop: " + newword)
-						#print("Endindex in for loop :"+ str(endindex))
-						#print(heap1.size)
-						heap1.insert(newword,entry.pos + endindex,entry.prob + math.log(Pw(newword)), entry)
-						#print(heap1.size)
+						heap1.insert(newword,entry.pos + endindex,entry.prob + math.log10(Pw(newword)), entry) 	#Adds the new entry
 			
 				del entry
 			finalindex = len(output)
 			finalentry = chart[finalindex-1]
 			temp = ""
 		
-			temp = finalentry.word			#Do while loop
+			temp = finalentry.word			#Do while loop to iteratively cycle through the answer. The answer first be on the last word, but it will have a pointer pointing to the word before that and so on.. until the whole sentence is outputted.
 			while(finalentry.pointer != None):
 				finalentry = finalentry.pointer
 				temp = finalentry.word + " " + temp
