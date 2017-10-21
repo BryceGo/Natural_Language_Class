@@ -1,6 +1,3 @@
+Bryce Golamco
 
-Your documentation
-------------------
-
-Make it so.
 

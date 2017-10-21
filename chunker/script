@@ -1,0 +1,7 @@
+#!/bin/bash
+clear
+
+python default.py -m data/default.model
+python perc.py -m data/default.model > output
+python score-chunks.py -t output
+

@@ -32,11 +32,91 @@ import perc
 import sys, optparse, os
 from collections import defaultdict
 
-def perc_train(train_data, tagset, numepochs):
-    feat_vec = defaultdict(int)
-    # insert your code here
-    # please limit the number of iterations of training to n iterations
-    return feat_vec
+
+def train_tags(train):
+	output = []
+	i = 0
+	while(i < len(train)):
+		x = train[i].split()
+		output.append(x[2])
+		i = i + 1
+	return output
+
+def word_list(train):
+	output = []
+	i = 0
+	while(i < len(train)):
+		x = train[i].split()
+		output.append(x[0])
+		i = i + 1
+	return output
+
+def pos_list(train):
+	output = []
+	i = 0
+	while(i < len(train)):
+		x = train[i].split()
+		output.append(x[1])
+		i = i + 1
+	return output
+
+def add_one_feat(feat_vec,key_z,key_true):
+	if feat_vec[key_z] != None:
+		feat_vec[key_z] -= 1
+		if feat_vec[key_z] <= 0:
+			feat_vec.pop(key_z)
+	if feat_vec[key_true] == None:
+		feat_vec[key_true] = 1
+	else:
+		feat_vec[key_true] += 1
+	return
+
+
+def feat_01(feat_vec,word_list,pos_list,tag_list,z_list,position):
+	if ((position - 1) < 0):
+		return
+
+	if(tag_list[position-1] != z_list[position-1]):
+		key_z = ("U01:" + word_list[position-1], z_list[position-1])
+		key_true = ("U01:" + word_list[position-1], tag_list[position-1])
+	
+		add_one_feat(feat_vec,key_z,key_true)
+
+def feat_02(feat_vec,word_list,pos_list,tag_list,z_list,position):
+	if(tag_list[position] != z_list[position]):
+		key_z = ("U02:" + word_list[position], z_list[position])
+		key_true = ("U02:" + word_list[position], tag_list[position])
+		
+		add_one_feat(feat_vec,key_z,key_true)
+	return
+
+def check_and_change(feat_vec,word_list,pos_list,tag_list,z_list,position):
+	feat_01(feat_vec,word_list,pos_list,tag_list,z_list,position)
+	feat_02(feat_vec,word_list,pos_list,tag_list,z_list,position)
+	
+
+
+
+def perc_train(train_data,tagset,numepochs):
+	numepochs = 2 #manual change
+	feat_vec = defaultdict(int)
+	tags = {}
+
+	for i in range(0,numepochs):
+		for j in range(0,len(train_data)):
+			label_list = train_data[j][0]
+			feat_list = train_data[j][1]
+
+			z = perc.perc_test(feat_vec,label_list, feat_list,tagset,tagset[0])
+			
+			for k in range(0,len(z)):
+				temp = train_tags(label_list)
+				if(z[k] != temp[k]):
+					check_and_change(feat_vec,word_list(label_list),pos_list(label_list),train_tags(label_list),z,k)
+
+	return feat_vec
+
+
 
 if __name__ == '__main__':
     optparser = optparse.OptionParser()
