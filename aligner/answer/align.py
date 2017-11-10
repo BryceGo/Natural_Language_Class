@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+
+#Bryce Golamco
+#bgolamco@sfu.ca
+
+
+#This algorithm uses a translation and distortion parameter from the IBM Model 2
+
 import optparse, sys, os, logging
 from collections import defaultdict
 
@@ -20,8 +27,8 @@ if opts.logfile:
 
 sys.stderr.write("Training using EM algorithm...")
 bitext = [[sentence.strip().split() for sentence in pair] for pair in zip(open(f_data), open(e_data))[:opts.num_sents]]
-f_count = defaultdict(int)
-e_count = defaultdict(int)
+f_count = defaultdict(int) #Counts for the french word
+e_count = defaultdict(int) #Counts for the english word
 fe_count = defaultdict(int)
 
 qa_count = defaultdict(int)	#Counts for alignments q(j|i,l,m)
@@ -40,7 +47,7 @@ q_k = defaultdict(int)
 
 iterations = 10
 k = 0
-#Initialize
+#Initialize the t_k and q_k arrays
 sys.stderr.write("\n")
 sys.stderr.write("Initializing...")
 for(a,(b,c)) in enumerate(bitext):
@@ -54,7 +61,7 @@ sys.stderr.write("\n")
 sys.stderr.write("Done initializing\n")
 sys.stderr.write("Training " +  str(iterations) + " iterations.\n")
 
-
+#The for loop that implements the EM algorithm (It is defaulted to run for 10 iterations)
 while(k < iterations):
 	k += 1
 	sys.stderr.write("Iteration " + str(k) + "...\n")
@@ -83,43 +90,15 @@ while(k < iterations):
 
 sys.stderr.write("Training Complete...\n")
 sys.stderr.write("Aligning...\n")
-
+#The for loop that searches for the best possible alignment
 for (k,(f,e)) in enumerate(bitext):
 	for (i,f_i) in enumerate(f):
-		#print("Number of french: " + str(i))
 		bestp = 0
 		bestj = 0
 		for (j,e_j) in enumerate(e):
-			#print(j)
 			if t_k[(f_i,e_j)]*q_k[(j,i,len(e),len(f))] > bestp: 
 				bestp = t_k[(f_i,e_j)]*q_k[(j,i,len(e),len(f))]
 				bestj = j
-		#print("Chosen J: " + str(bestj))
 		sys.stdout.write("%i-%i " %(i,bestj))
 	sys.stdout.write("\n")
 
-if False: """
-for (n, (f, e)) in enumerate(bitext):
-  for f_i in set(f):
-    f_count[f_i] += 1
-    for e_j in set(e):
-      fe_count[(f_i,e_j)] += 1
-  for e_j in set(e):
-    e_count[e_j] += 1
-  if n % 500 == 0:
-    sys.stderr.write(".")
-
-dice = defaultdict(int)
-for (k, (f_i, e_j)) in enumerate(fe_count.keys()):
-  dice[(f_i,e_j)] = 2.0 * fe_count[(f_i, e_j)] / (f_count[f_i] + e_count[e_j])
-  if k % 5000 == 0:
-    sys.stderr.write(".")
-sys.stderr.write("\n")
-
-for (f, e) in bitext:
-  for (i, f_i) in enumerate(f): 
-    for (j, e_j) in enumerate(e):
-      if dice[(f_i,e_j)] >= opts.threshold:
-        sys.stdout.write("%i-%i " % (i,j))
-  sys.stdout.write("\n")
-"""

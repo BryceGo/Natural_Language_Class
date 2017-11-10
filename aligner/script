@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#python default.py -n 100000 | python check-alignments.py | python score-alignments.py
+
+#python default.py -n 10000 > output
+#python check-alignments.py -i output
+#python score-alignments.py -i output
+
+
+
+python answer/align.py -p europarl -f de -n 100000 > output.a
+head -1000 output.a > upload.a
