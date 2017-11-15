@@ -1,0 +1,6 @@
+#!/bin/bash
+#Auto push to git
+
+git add -A
+git commit -m "Auto push decoder changes.."
+git push
