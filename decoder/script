@@ -1,0 +1,4 @@
+#!/bin/bash
+
+python default.py > output
+python score-decoder.py < output
