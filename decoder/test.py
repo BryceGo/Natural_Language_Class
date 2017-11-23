@@ -1,14 +1,27 @@
 
 
-variable = []
-for i in xrange(0,9):
-	variable[i] = []
+def num_translated(bits):
+	x = 0
+	for a in xrange(0,len(bits)):
+		if bits[a] == 1:
+			x += 1
+	return x
 
-for i in xrange(0,9):
-	for j in xrange(0,9):
-		variable[i][j] = 1
+b = {}
+
+b[0] = 1
+b[7] = 1
+b[6] = 1
+b[5] = 1
+b[4] = 1
+b[3] = 1
+b[2] = 1
+
+b[8] = 0
+b[9] = 0
+b[10] = 0
 
 
-for i in xrange(0,9):
-	for j in xrange(0,9):
-		print(variable[i][j])
+print(num_translated(b))
+
+

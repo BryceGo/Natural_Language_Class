@@ -42,13 +42,8 @@ def extract_english(h):
 
 
 for f in french:
-	hypothesis = namedtuple("hypothesis", "logprob, lm_state, predecessor, phrase, byte_length, end_char")
-
-	byte = {}	
-	for i,_ in enumerate(f):
-		byte[i] = 0 
-	initial_hypothesis = hypothesis(0.0,lm.begin(), None, None, byte, 0)
-	byte = None
+	hypothesis = namedtuple("hypothesis", "logprob, lm_state, predecessor, phrase")
+	initial_hypothesis = hypothesis(0.0,lm.begin(), None, None)
 	stacks = [{} for _ in f] + [{}]
 	stacks[0][lm.begin()] = initial_hypothesis
 	for i, stack in enumerate(stacks[:-1]):
@@ -64,15 +59,15 @@ for f in french:
 					for phrase in tm[f[i:j]]:
 						logprob = h.logprob + phrase.logprob
 						lm_state = h.lm_state
-					for word in phrase.english.split():
-						(lm_state,word_logprob) = lm.score(lm_state, word)
-						logprob += word_logprob
-					logprob += lm.end(lm_state) if j == len(f) else 0.0
-					new_hypothesis = hypothesis(logprob,lm_state,h,phrase)
+						for word in phrase.english.split():
+							(lm_state,word_logprob) = lm.score(lm_state, word)
+							logprob += word_logprob
+						logprob += lm.end(lm_state) if j == len(f) else 0.0
+						new_hypothesis = hypothesis(logprob,lm_state,h,phrase)
 
-					#Add
-					if lm_state not in stacks[j] or stacks[j][lm_state].logprob < logprob:
-						stacks[j][lm_state] = new_hypothesis
+						#Add
+						if lm_state not in stacks[j] or stacks[j][lm_state].logprob < logprob:
+							stacks[j][lm_state] = new_hypothesis
 	winner = max(stacks[-1].itervalues(), key=lambda h : h.logprob)
 	print extract_english(winner)
 			
