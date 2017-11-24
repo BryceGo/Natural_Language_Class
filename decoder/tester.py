@@ -27,9 +27,9 @@ sys.stderr.write("Decoding %s...\n" % (opts.input,))
 
 #sys.stderr.write(str(lm.score(("have", "got"),"the")) + "\n")
 #sys.stderr.write(str(lm.score(lm.begin(),"talked ,")) + "\n")
-beam_width = 10
-distortion_limit = 10
-distortion_value = -1
+beam_width = 50
+distortion_limit = 5
+distortion_value = -0.001 #-0.005
 
 
 
