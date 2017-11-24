@@ -1,4 +1,4 @@
 #!/bin/bash
 
-python default.py > output
+python tester.py > output
 python score-decoder.py < output

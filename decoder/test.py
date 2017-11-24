@@ -1,27 +1,8 @@
 
+j = 2
+k = 4
+bit_temp = "00000"
+for a in xrange(j,k+1):
+	bit_temp = bit_temp[0:a] + "1" + bit_temp[a+1:len(bit_temp)]
 
-def num_translated(bits):
-	x = 0
-	for a in xrange(0,len(bits)):
-		if bits[a] == 1:
-			x += 1
-	return x
-
-b = {}
-
-b[0] = 1
-b[7] = 1
-b[6] = 1
-b[5] = 1
-b[4] = 1
-b[3] = 1
-b[2] = 1
-
-b[8] = 0
-b[9] = 0
-b[10] = 0
-
-
-print(num_translated(b))
-
-
+print(bit_temp)

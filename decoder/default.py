@@ -25,12 +25,15 @@ for word in set(sum(french,())):
 
 sys.stderr.write("Decoding %s...\n" % (opts.input,))
 
-beam_width = 100
+beam_width = 10
+distortion_limit = 5
+distortion_value = -1
+
 
 def num_translated(bits):
 	x = 0
 	for iterate in xrange(0,len(bits)):
-		if bits[iterate] == 1:
+		if bits[iterate] == "1":
 			x += 1
 	return x
 
@@ -42,19 +45,43 @@ def max_value(stack):
 		elif x.logprob > max:
 			max = x.logprob
 	return max
-		
+
+#def byte_to_string(x,f_length):
+#	string = ""
+#	for i in xrange(0,f_length):
+#		string = string + str(x[i])
+#	return string
+
+def eq(state1, state2):
+	if state1.lm_state != state2.lm_state2:
+		return False
+	if state1.end_char != state.end_char:
+		return False
+	if state1.byte_length != state2.byte_length:
+		return False
+	return True
+
+def Add(state, stack):
+	for i in stack.itervalues():
+		if eq(state,i):
+			if i.logprob < state.logprob:
+				i = state
+		else:
+			stack[(state.lm_state, state.byte_length, state.end_char)] = state
+
 
 
 for f in french:
 	hypothesis = namedtuple("hypothesis", "logprob, lm_state, predecessor, phrase, byte_length, end_char")
 
-	byte = {}	
-	for i,_ in enumerate(f):
-		byte[i] = 0 
+	byte = ""
+	for i in xrange(0,len(f)):
+		byte = byte + "0"
+
 	initial_hypothesis = hypothesis(0.0,lm.begin(), None, None, byte, 0)
 	byte = None
 	stacks = [{} for _ in f] + [{}]
-	stacks[0][lm.begin()] = initial_hypothesis
+	stacks[0][(lm.begin(),byte,0)] = initial_hypothesis
 	for i, stack in enumerate(stacks[:-1]):		
 		maxvalue = max_value(stack)
 		for h in sorted(stack.itervalues(), key=lambda h: -h.logprob): 
@@ -66,37 +93,44 @@ for f in french:
 			for j in xrange(0,len(f)):
 				#sys.stderr.write("J Ranges ------------" + str(j) + "\n")
 				
-				if h.byte_length[j] == 1:
+				if h.byte_length[j] == "1":
 					continue
-				#if(h.end_char - j) > 5: #distortion
-				#	break			
+				if abs(h.end_char + 1 - j) > distortion_limit: #distortion
+					break			
 
 				for k in xrange(j,len(f)):
 					#sys.stderr.write("K ranges" + str(k) + "\n")
-					if h.byte_length[k] == 1:
+					if h.byte_length[k] == "1":
 						break
 					if f[j:k+1] in tm:
 						for phrase in tm[f[j:k+1]]:
 							#sys.stderr.write(str(phrase.english) +  "\n")
-							logprob = h.logprob + phrase.logprob
+							logprob = h.logprob + phrase.logprob + (abs(h.end_char + 1 - j)*distortion_value)
 							lm_state = h.lm_state
 							for word in phrase.english.split():
 								(lm_state,word_logprob) = lm.score(lm_state,word)
 								logprob += word_logprob
 							logprob += lm.end(lm_state) if num_translated(h.byte_length) == len(f) else 0.0
 							
-							bit_temp = {}
-							for y in xrange(0,len(f)):
-								bit_temp[y] = h.byte_length[y]
+							bit_temp = h.byte_length
 							for a in xrange(j,k+1):
-								bit_temp[a] = 1
-							new_hypothesis = hypothesis(logprob,lm_state,h,phrase,bit_temp,k)
+								bit_temp = bit_temp[0:a] + "1" + bit_temp[a+1:len(f)]
+		
+							#if h.end_char > k:
+							#	end = h.end_char
+							#else:
+							#	end = k
+							end = k
+							new_hypothesis = hypothesis(logprob,lm_state,h,phrase,bit_temp,end)
 							
 							#Add
 							bytes_used = num_translated(bit_temp)
-							if lm_state not in stacks[bytes_used] or stacks[bytes_used][lm_state].logprob < logprob:
-								#sys.stderr.write(str(new_hypothesis) + "\n")
-								stacks[bytes_used][lm_state] = new_hypothesis
+
+							if (lm_state,bit_temp,end) not in stacks[bytes_used] or stacks[bytes_used][(lm_state,bit_temp,end)].logprob < logprob:
+								stacks[bytes_used][(lm_state,bit_temp,end)] = new_hypothesis
+							#Add(new_hypothesis, stacks[bytes_used])						
+							#if lm_state not in stacks[bytes_used] or stacks[bytes_used][lm_state].logprob < logprob:
+							#	stacks[bytes_used][lm_state] = new_hypothesis
 
 	winner = max(stacks[-1].itervalues(), key=lambda h : h.logprob)
 
@@ -107,7 +141,8 @@ for f in french:
 	#sys.stderr.write(str(winner) + "\n")
 	#x = num_translated(winner.byte_length)
 	#sys.stderr.write(str(x))
-
+	#
+#hypothesis = namedtuple("hypothesis", "logprob, lm_state, predecessor, phrase, byte_length, end_char")
 
 		
   # The following code implements a monotone decoding
