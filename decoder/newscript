@@ -1,0 +1,31 @@
+#!/bin/bash
+
+
+python tester.py -s 0.1 > output_folder/output_0.1
+python score-decoder.py < output_folder/output_0.1 > output_folder/out_0.1
+
+python tester.py -s 0.2 > output_folder/output_0.2
+python score-decoder.py < output_folder/output_0.2 > output_folder/out_0.2
+
+python tester.py -s 0.3 > output_folder/output_0.3
+python score-decoder.py < output_folder/output_0.3 > output_folder/out_0.3
+
+python tester.py -s 0.4 > output_folder/output_0.4
+python score-decoder.py < output_folder/output_0.4 > output_folder/out_0.4
+
+python tester.py -s 0.5 > output_folder/output_0.5
+python score-decoder.py < output_folder/output_0.5 > output_folder/out_0.5
+
+python tester.py -s 0.6 > output_folder/output_0.6
+python score-decoder.py < output_folder/output_0.6 > output_folder/out_0.6
+
+python tester.py -s 0.7 > output_folder/output_0.7
+python score-decoder.py < output_folder/output_0.7 > output_folder/out_0.7
+
+python tester.py -s 0.8 > output_folder/output_0.8
+python score-decoder.py < output_folder/output_0.8 > output_folder/out_0.8
+
+
+python tester.py -s 0.9 > output_folder/output_0.9
+python score-decoder.py < output_folder/output_0.1 > output_folder/out_0.9
+

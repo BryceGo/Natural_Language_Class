@@ -25,62 +25,48 @@ for word in set(sum(french,())):
 
 sys.stderr.write("Decoding %s...\n" % (opts.input,))
 
-beam_width = 100
-distortion_limit = 5
-distortion_value = -1
+
+beam_width = 50				#beam width parameter
+distortion_limit = 5		#Distortion limit
+distortion_value = -0.005 	#Distortion value
+
 
 
 def num_translated(bits):
 	x = 0
 	for iterate in xrange(0,len(bits)):
-		if bits[iterate] == 1:
+		if bits[iterate] == "1":
 			x += 1
 	return x
-
-def max_value(stack):
-	max = None
-	for x in stack.itervalues():
-		if max == None:
-			max = x.logprob
-		elif x.logprob > max:
-			max = x.logprob
-	return max
-		
 
 
 for f in french:
 	hypothesis = namedtuple("hypothesis", "logprob, lm_state, predecessor, phrase, byte_length, end_char")
-
-	byte = {}	
-	for i,_ in enumerate(f):
-		byte[i] = 0 
+	
+	byte = ""
+	for i in xrange(0,len(f)):
+		byte = byte + "0"
+ 
 	initial_hypothesis = hypothesis(0.0,lm.begin(), None, None, byte, 0)
-	byte = None
 	stacks = [{} for _ in f] + [{}]
-	stacks[0][lm.begin()] = initial_hypothesis
+	stacks[0][(lm.begin(), byte, 0)] = initial_hypothesis
 	for i, stack in enumerate(stacks[:-1]):		
-		maxvalue = max_value(stack)
-		for h in sorted(stack.itervalues(), key=lambda h: -h.logprob): 
-		#for h in sorted(stack.itervalues(), key=lambda h: -h.logprob)[:opts.s]:
-#Beam
-			if (h.logprob < maxvalue - beam_width):
-				break
+		maxvalue = max(stack.itervalues(), key= lambda h: h.logprob)
+		for h in sorted(stack.itervalues(), key=lambda h: -h.logprob): #Beam
+			if (h.logprob < maxvalue.logprob - beam_width):
+				continue
 
-			for j in xrange(0,len(f)):
-				#sys.stderr.write("J Ranges ------------" + str(j) + "\n")
-				
-				if h.byte_length[j] == 1:
+			for j in xrange(0,len(f)): #Iterate over every word in the sentence
+				if h.byte_length[j] == "1":
 					continue
-				if abs(h.end_char + 1 - j) > distortion_limit: #distortion
+				if abs(h.end_char + 1 - j) > distortion_limit: #distortion limit
 					break			
 
 				for k in xrange(j,len(f)):
-					#sys.stderr.write("K ranges" + str(k) + "\n")
-					if h.byte_length[k] == 1:
+					if h.byte_length[k] == "1":
 						break
 					if f[j:k+1] in tm:
-						for phrase in tm[f[j:k+1]]:
-							#sys.stderr.write(str(phrase.english) +  "\n")
+						for phrase in tm[f[j:k+1]]: #Basically the Next function
 							logprob = h.logprob + phrase.logprob + (abs(h.end_char + 1 - j)*distortion_value)
 							lm_state = h.lm_state
 							for word in phrase.english.split():
@@ -88,24 +74,20 @@ for f in french:
 								logprob += word_logprob
 							logprob += lm.end(lm_state) if num_translated(h.byte_length) == len(f) else 0.0
 							
-							bit_temp = {}
-							for y in xrange(0,len(f)):
-								bit_temp[y] = h.byte_length[y]
+							bit_temp = h.byte_length
 							for a in xrange(j,k+1):
-								bit_temp[a] = 1
+								bit_temp = bit_temp[0:a] + "1" + bit_temp[a+1:len(f)]
 		
-							#if h.end_char > k:
-							#	end = h.end_char
-							#else:
-							#	end = k
 							end = k
 							new_hypothesis = hypothesis(logprob,lm_state,h,phrase,bit_temp,end)
 							
-							#Add
+							
 							bytes_used = num_translated(bit_temp)
-							if lm_state not in stacks[bytes_used] or stacks[bytes_used][lm_state].logprob < logprob:
-								#sys.stderr.write(str(new_hypothesis) + "\n")
-								stacks[bytes_used][lm_state] = new_hypothesis
+				
+							#Basically the Add Function of the algorithm
+							if (lm_state,bit_temp,end) not in stacks[bytes_used] or stacks[bytes_used][(lm_state,bit_temp,end)].logprob < logprob:
+								stacks[bytes_used][(lm_state,bit_temp,end)] = new_hypothesis
+
 
 	winner = max(stacks[-1].itervalues(), key=lambda h : h.logprob)
 
@@ -113,59 +95,5 @@ for f in french:
 		return "" if h.predecessor is None else "%s%s " %(extract_english(h.predecessor), h.phrase.english)
 
 	print extract_english(winner)
-	#sys.stderr.write(str(winner) + "\n")
-	#x = num_translated(winner.byte_length)
-	#sys.stderr.write(str(x))
-	#
-hypothesis = namedtuple("hypothesis", "logprob, lm_state, predecessor, phrase, byte_length, end_char")
-	def eq(state1, state2):
-		if state1.lm_state != state2.lm_state2:
-			return False
-		if state1.phrase != state2.phrase:
-			return False
-		if state1.end_char != state.end_char:
-			return False
-		if len(state1.byte_length) != len(state2.byte_length):
-			return False
-		for i in len(state1.byte_length):
-			if state1.byte_length[i] != state2.byte_length[i]:
-				return False	
-		return True
-
-	def Add(state, stack):
-		for i in stack.itervalues():
-			if eq(state,i):
-				if i.logprob < state.logprob:
-					i = state
-			else:
-				stack[()] = state
-		
 
 
-		
-  # The following code implements a monotone decoding
-  # algorithm (one that doesn't permute the target phrases).
-  # Hence all hypotheses in stacks[i] represent translations of 
-  # the first i words of the input sentence. You should generalize
-  # this so that they can represent translations of *any* i words.
-
-if False:
-	"""
-
-			for j in xrange(i+1,len(f) + 1):
-								
-				#Next
-				if f[i:j] in tm:
-					for phrase in tm[f[i:j]]:
-						logprob = h.logprob + phrase.logprob
-						lm_state = h.lm_state
-						for word in phrase.english.split():
-							(lm_state,word_logprob) = lm.score(lm_state, word)
-							logprob += word_logprob
-						logprob += lm.end(lm_state) if j == len(f) else 0.0
-						new_hypothesis = hypothesis(logprob,lm_state,h,phrase)
-
-					#Add
-						if lm_state not in stacks[j] or stacks[j][lm_state].logprob < logprob:
-							stacks[j][lm_state] = new_hypothesis
-	"""

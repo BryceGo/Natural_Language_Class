@@ -10,7 +10,7 @@ optparser.add_option("-t", "--translation-model", dest="tm", default="data/tm", 
 optparser.add_option("-l", "--language-model", dest="lm", default="data/lm", help="File containing ARPA-format language model (default=data/lm)")
 optparser.add_option("-n", "--num_sentences", dest="num_sents", default=sys.maxint, type="int", help="Number of sentences to decode (default=no limit)")
 optparser.add_option("-k", "--translations-per-phrase", dest="k", default=1, type="int", help="Limit on number of translations to consider per phrase (default=1)")
-optparser.add_option("-s", "--stack-size", dest="s", default=1, type="int", help="Maximum stack size (default=1)")
+optparser.add_option("-s", "--stack-size", dest="s", default=0.5, type="float", help="Maximum stack size (default=1)")
 optparser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False,  help="Verbose mode (default=off)")
 opts = optparser.parse_args()[0]
 
@@ -31,6 +31,7 @@ beam_width = 50
 distortion_limit = 5
 distortion_value = -0.001 #-0.005
 
+weight = opts.s
 
 
 def num_translated(bits):
@@ -70,11 +71,11 @@ for f in french:
 						break
 					if f[j:k+1] in tm:
 						for phrase in tm[f[j:k+1]]:
-							logprob = h.logprob + phrase.logprob + (abs(h.end_char + 1 - j)*distortion_value)
+							logprob = h.logprob + (weight * phrase.logprob) + (abs(h.end_char + 1 - j)*distortion_value)
 							lm_state = h.lm_state
 							for word in phrase.english.split():
 								(lm_state,word_logprob) = lm.score(lm_state,word)
-								logprob += word_logprob
+								logprob += (word_logprob * (1-weight))
 							logprob += lm.end(lm_state) if num_translated(h.byte_length) == len(f) else 0.0
 							
 							bit_temp = h.byte_length
