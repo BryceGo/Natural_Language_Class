@@ -1,0 +1,4 @@
+#!/bin/bash
+python default.py > output
+python check.py < output
+python score-evaluation.py < output
