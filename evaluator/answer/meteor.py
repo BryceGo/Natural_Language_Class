@@ -1,78 +1,42 @@
 #!/usr/bin/env python
 import argparse # optparse is deprecated
 from itertools import islice # slicing for iterators
-import math,sys,copy,nltk
-from nltk.util import ngrams
+import math, sys, copy
 from nltk.corpus import wordnet
 
-
-ALPHA = 0.9
+ALPHA = 0.5
 BETA = 3.0
-GAMMA = 0.5
-
-#This version cannot have more than a unigram (Note)
-def synonym(word):
-	try:
-		syn = wordnet.synsets(word)
-		synonyms = []
-
-		for i in syn:
-			for j in i.lemmas():
-				synonyms += [j.name().encode('ascii')]
-		synonyms = list(set(synonyms))
-	except:
-		return []
-
-	return synonyms
+GAMMA = 0.3
 
 
-def word_matches(h,ref,ngram):
+
+def word_matches(h,ref):
 	sum = 0
 	temp_ref = copy.deepcopy(ref)
-	temp_h = copy.deepcopy(h)
-	new_h = []
-	new_ref = []
-	
-	if ngram > 1:
-		temp_h = ngrams(temp_h,ngram)
-		temp_ref = ngrams(temp_ref,ngram)
-	
-	for i in temp_h:
-		new_h += [i]
-	for j in temp_ref:
-		new_ref += [j]
-
-	for i in new_h:
-		if i in new_ref:
-			new_ref.remove(i)
+	for i in h:
+		if i in temp_ref:
+			temp_ref.remove(i)
 			sum += 1.0
-	
-	for i in new_h:
-		for j in new_ref:
-			if i in synonym(j):
-				sum += 1.0
-				new_ref.remove(j)
-				break
 	return sum
 
-
-def precision(test,ref,ngram):
-	length = float(len(test) - ngram + 1)
-	x = word_matches(test,ref,ngram)
+def precision(test,ref):
+	length = float(len(test))
+	x = word_matches(test,ref)
 	if length == 0:
 		return 0
+
 	return x/length
 
-def recall(test,ref,ngram):
-	length = float(len(ref) - ngram + 1)
-	x = word_matches(test,ref, ngram)
+def recall(test,ref):
+	length = float(len(ref))
+	x = word_matches(test,ref)
 	if length == 0:
-		return 0
+		return 0	
 	return x/length
 
 def F_mean(test, ref,alpha):
-	p = precision(test,ref,1)
-	r = recall(test,ref,1)
+	p = precision(test,ref)
+	r = recall(test,ref)
 	if ((alpha*p) + ((1-alpha)*r)) == 0:
 		return 0
 	fmean = p*r
@@ -96,7 +60,7 @@ def chunks(test,ref):
 	for iteratei, i in enumerate(ref_array):
 		if i in test_array:
 			for iteratej,j in enumerate(test_array):
-				if i == j or (i in synonym(j)):
+				if i == j:
 					if traversed[iteratej] == 1:
 						continue
 					traversed[iteratej] = 1
@@ -124,26 +88,13 @@ def chunks(test,ref):
 
 
 def penalty(test,ref,beta,gamma):
-	m = word_matches(test,ref,1)
+	m = word_matches(test,ref)
 	c = chunks(test,ref)
 	ch = 0 if m==0 else c/m
 	return (gamma * math.pow(ch, beta))
 
 def score(test,ref,alpha,beta,gamma):
 	return (1-penalty(test,ref,beta,gamma))*F_mean(test,ref,alpha)
-
-def bleu(test,ref):
-	mul = 1
-	for i in xrange(1,5):
-		value = precision(test,ref,i)
-		mul *= value
-	mul= math.pow(mul,1/4)
-
-	pen = [1,len(ref)/len(test)]
-	return min(pen)*mul
-
-
-
 
 def main():
 	parser = argparse.ArgumentParser(description='Evaluate translation hypotheses.')
@@ -161,7 +112,6 @@ def main():
     # note: the -n option does not work in the original code
 
 	for h1, h2, ref in islice(sentences(), opts.num_sentences):		
-		
 		h1_match = score(h1,ref,ALPHA,BETA,GAMMA)
 		h2_match = score(h2,ref,ALPHA, BETA, GAMMA)
 		print(1 if h1_match > h2_match else # \begin{cases}

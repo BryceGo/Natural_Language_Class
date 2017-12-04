@@ -1,0 +1,3 @@
+https://pythonprogramming.net/wordnet-nltk-tutorial/
+https://en.wikipedia.org/wiki/METEOR
+http://wordnet.princeton.edu/

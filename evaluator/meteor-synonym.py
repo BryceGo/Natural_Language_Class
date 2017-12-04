@@ -3,29 +3,56 @@ import argparse # optparse is deprecated
 from itertools import islice # slicing for iterators
 import math,sys,copy,nltk
 from nltk.util import ngrams
+from nltk.corpus import wordnet
 
-ALPHA = 0.5
+
+ALPHA = 0.9
 BETA = 3.0
-GAMMA = 0.3
+GAMMA = 0.5
+
+#This version cannot have more than a unigram (Note)
+def synonym(word):
+	try:
+		syn = wordnet.synsets(word)
+		synonyms = []
+
+		for i in syn:
+			for j in i.lemmas():
+				synonyms += [j.name().encode('ascii')]
+		synonyms = list(set(synonyms))
+	except:
+		return []
+
+	return synonyms
+
 
 def word_matches(h,ref,ngram):
 	sum = 0
 	temp_ref = copy.deepcopy(ref)
 	temp_h = copy.deepcopy(h)
-	temp_h = ngrams(temp_h,ngram)
-	temp_ref = ngrams(temp_ref,ngram)
-
 	new_h = []
 	new_ref = []
+	
+	if ngram > 1:
+		temp_h = ngrams(temp_h,ngram)
+		temp_ref = ngrams(temp_ref,ngram)
+	
 	for i in temp_h:
 		new_h += [i]
 	for j in temp_ref:
 		new_ref += [j]
 
-	for i in new_h	:
+	for i in new_h:
 		if i in new_ref:
 			new_ref.remove(i)
 			sum += 1.0
+	
+	for i in new_h:
+		for j in new_ref:
+			if i in synonym(j):
+				sum += 1.0
+				new_ref.remove(j)
+				break
 	return sum
 
 
@@ -69,7 +96,7 @@ def chunks(test,ref):
 	for iteratei, i in enumerate(ref_array):
 		if i in test_array:
 			for iteratej,j in enumerate(test_array):
-				if i == j:
+				if i == j or (i in synonym(j)):
 					if traversed[iteratej] == 1:
 						continue
 					traversed[iteratej] = 1
@@ -134,11 +161,9 @@ def main():
     # note: the -n option does not work in the original code
 
 	for h1, h2, ref in islice(sentences(), opts.num_sentences):		
-		h1_match = bleu(h1,ref)
-		h2_match = bleu(h2,ref)		
-
-		#h1_match = score(h1,ref,ALPHA,BETA,GAMMA)
-		#h2_match = score(h2,ref,ALPHA, BETA, GAMMA)
+		
+		h1_match = score(h1,ref,ALPHA,BETA,GAMMA)
+		h2_match = score(h2,ref,ALPHA, BETA, GAMMA)
 		print(1 if h1_match > h2_match else # \begin{cases}
 			(0 if h1_match == h2_match
 					else -1)) # \end{cases}
