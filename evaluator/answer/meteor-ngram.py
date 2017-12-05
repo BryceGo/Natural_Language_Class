@@ -4,7 +4,7 @@ from itertools import islice # slicing for iterators
 import math,sys,copy,nltk
 from nltk.util import ngrams
 
-ALPHA = 0.5
+ALPHA = 0.9
 BETA = 3.0
 GAMMA = 0.3
 
@@ -61,11 +61,22 @@ def chunks(test,ref,ngram):
 	start = True
 	back_ref_pos = 0
 	back_test_pos = 0
-
+	
 	if ngram > 1:
 		test_array = ngrams(test_array,ngram)
 		ref_array = ngrams(ref_array,ngram)
+	
 
+	new_test = []
+	new_ref = []
+	for i in test_array:
+		new_test += [i]
+	for j in ref_array:
+		new_ref += [j]
+
+	test_array = new_test
+	ref_array = new_ref	
+	
 	traversed = []
 	for i in xrange(0,len(test_array)):
 		traversed += [0]
@@ -107,21 +118,12 @@ def penalty(test,ref,beta,gamma,ngram):
 	ch = 0 if m==0 else c/m
 	return (gamma * math.pow(ch, beta))
 
-def score(test,ref,alpha,beta,gamma,ngram):
-	return (1-penalty(test,ref,beta,gamma,ngram))*F_mean(test,ref,alpha,ngram)
 
-def bleu(test,ref):
-	mul = 1
-	for i in xrange(1,5):
-		value = precision(test,ref,i)
-		mul *= value
-	mul= math.pow(mul,1/4)
-
-	pen = [1,len(ref)/len(test)]
-	return min(pen)*mul
-
-
-
+def score(test,ref,alpha,beta,gamma):
+	sum = 0
+	for i in xrange(1,5):		
+		sum += (1-penalty(test,ref,beta,gamma,i))*F_mean(test,ref,alpha,i)
+	return sum
 
 def main():
 	parser = argparse.ArgumentParser(description='Evaluate translation hypotheses.')
@@ -140,10 +142,11 @@ def main():
 
 	for h1, h2, ref in islice(sentences(), opts.num_sentences):		
 		#h1_match = bleu(h1,ref)
-		#h2_match = bleu(h2,ref)		
+		#h2_match = bleu(h2,ref)
+		h1_match = score(h1,ref,ALPHA,BETA,GAMMA)
+		h2_match = score(h2,ref,ALPHA, BETA, GAMMA)
 
-		h1_match = score(h1,ref,ALPHA,BETA,GAMMA,2)
-		h2_match = score(h2,ref,ALPHA, BETA, GAMMA,2)
+
 		print(1 if h1_match > h2_match else # \begin{cases}
 			(0 if h1_match == h2_match
 					else -1)) # \end{cases}
