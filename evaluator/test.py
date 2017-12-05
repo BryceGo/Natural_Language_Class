@@ -1,5 +1,6 @@
 import os
 import random
+import sys
 maximum = -1
 max_a = 0
 max_b = 0
@@ -10,8 +11,7 @@ curr_b = 0
 curr_g = 0
 
 
-for i in xrange(0,10):
-	hill_climb_file = open("hill_results" + str(i),"w")
+for i in xrange(0,1):
 	alpha = round(random.uniform(0,0.9),2)
 	beta = round(random.uniform(1,4.5),2)
 	gamma = round(random.uniform(0,0.9),2)
@@ -23,14 +23,24 @@ for i in xrange(0,10):
 	local_max = -1
 
 	for i in xrange(1,4):
+		
+		sys.stderr.write("Turn alpha,beta,gamma: ")
+		sys.stderr.write(str(i))
+		sys.stderr.write(" ..............\n")
 		for j in xrange(0,10):
+			sys.stderr.write("Reading Turn ")
+			sys.stderr.write(str(i))
+			sys.stderr.write(" with iteration number : ")
+			sys.stderr.write(str(j))
+			sys.stderr.write(" ....................\n")
+
 			output1 = "python default.py -a " + str(alpha) + " -b " + str(beta)+ " -g " + str(gamma) + " > output"
 			output2 = "python check.py < output"
 			output3 = "python score-evaluation.py < output > results"
 			os.system(output1)
 			os.system(output2)
 			os.system(output3)
-
+			
 			file = open("results", "r")
 
 			for line in file:
@@ -69,6 +79,7 @@ for i in xrange(0,10):
 		max_b = curr_b
 		max_g = curr_g
 	
+	hill_climb_file = open("hill_results/hill_results" + str(i),"w")
 	hill_climb_file.write("Maximum Found is: " + str(maximum) + "\n")
 	hill_climb_file.write("Alpha is " + str(max_a) + "\n")
 	hill_climb_file.write("Beta is " + str(max_b) + "\n")
