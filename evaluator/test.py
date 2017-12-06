@@ -11,10 +11,10 @@ curr_b = 0
 curr_g = 0
 
 
-for i in xrange(0,10):
-	alpha = round(random.uniform(0,0.9),2)
-	beta = round(random.uniform(1,4.5),2)
-	gamma = round(random.uniform(0,0.9),2)
+for a in xrange(0,10):
+	alpha = round(random.uniform(0.5,1),2)
+	beta = round(random.uniform(2.5,5),2)
+	gamma = round(random.uniform(0.3,1),2)
 
 	INC_ALPHA = 0.1
 	INC_BETA = 0.5
@@ -23,11 +23,10 @@ for i in xrange(0,10):
 	local_max = -1
 
 	for i in xrange(1,4):
-		
-		sys.stderr.write("Turn alpha,beta,gamma: ")
-		sys.stderr.write(str(i))
-		sys.stderr.write(" ..............\n")
 		for j in xrange(0,10):
+
+			iteration_number = "Iteration Number : " + str(a) + " .....\n"
+			sys.stderr.write(iteration_number)
 			sys.stderr.write("Reading Turn ")
 			sys.stderr.write(str(i))
 			sys.stderr.write(" with iteration number : ")
@@ -65,12 +64,14 @@ for i in xrange(0,10):
 
 			if i == 1:
 				alpha += INC_ALPHA
+				alpha = min(alpha,1.0)
 			elif i == 2:
 				beta += INC_BETA
+				beta = min(beta,5.0)
 			elif i == 3:
-				gamma += INC_GAMMA			
+				gamma += INC_GAMMA
+				gamma = min(gamma, 1.0)		
 
-			alpha += INC_ALPHA
 			file.close()
 
 	if local_max > maximum:
@@ -79,7 +80,7 @@ for i in xrange(0,10):
 		max_b = curr_b
 		max_g = curr_g
 	
-	hill_climb_file = open("hill_results/hill_results" + str(i),"w")
+	hill_climb_file = open("hill_results/hill_results" + str(a),"w")
 	hill_climb_file.write("Maximum Found is: " + str(maximum) + "\n")
 	hill_climb_file.write("Alpha is " + str(max_a) + "\n")
 	hill_climb_file.write("Beta is " + str(max_b) + "\n")
