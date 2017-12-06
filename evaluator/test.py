@@ -65,20 +65,22 @@ for a in xrange(0,10):
 			if i == 1:
 				alpha += INC_ALPHA
 				alpha = min(alpha,1.0)
+				alpha = max(alpha,0)
 			elif i == 2:
 				beta += INC_BETA
 				beta = min(beta,5.0)
+				beta = max(beta,0)
 			elif i == 3:
 				gamma += INC_GAMMA
-				gamma = min(gamma, 1.0)		
+				gamma = min(gamma, 1.0)
+				gamma = max(0,gamma)
 
 			file.close()
 
-	if local_max > maximum:
-		maximum = local_max
-		max_a = curr_a
-		max_b = curr_b
-		max_g = curr_g
+	maximum = local_max
+	max_a = curr_a
+	max_b = curr_b
+	max_g = curr_g
 	
 	hill_climb_file = open("hill_results/hill_results" + str(a),"w")
 	hill_climb_file.write("Maximum Found is: " + str(maximum) + "\n")
