@@ -11,7 +11,7 @@ curr_b = 0
 curr_g = 0
 
 
-for a in xrange(0,10):
+for a in xrange(0,20):
 	alpha = round(random.uniform(0.5,1),2)
 	beta = round(random.uniform(2.5,5),2)
 	gamma = round(random.uniform(0.3,1),2)
