@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#python meteor-ngram-stem.py > output1
+#python check.py -i "data/train-test.hyp1-hyp2-ref" < output1
+#python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output1 > "test_results/meteor-ngram-stem-result"
+
+
+
+#python meteor-ngram-stem.py -i "data/train-test.hyp1-hyp2-ref" > output1
+#python check.py -i "data/train-test.hyp1-hyp2-ref" < output1
+#python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output1 > "test_results/meteor-ngram-stem-result"
+python meteor-ngram-wordnet-stem.py > output_ngram_wordnet_stem
+python check.py < output_ngram_wordnet_stem
+python score-evaluation.py < output_ngram_wordnet_stem > "output_tests/meteor-ngram-wordnet-stem-result"
+
+python meteor-ngram-wordnet-stem.py -i "data/train-test.hyp1-hyp2-ref" > output
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output > "test_results/meteor-ngram-wordnet-stem-result"
+
+

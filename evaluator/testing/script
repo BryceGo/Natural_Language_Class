@@ -1,0 +1,73 @@
+#!/bin/bash
+python meteor.py -i "data/train-test.hyp1-hyp2-ref" > output
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output > "test_results/meteor-result"
+
+python bleu.py -i "data/train-test.hyp1-hyp2-ref" > output
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output > "test_results/bleu-result"
+
+
+python meteor-ngram.py -i "data/train-test.hyp1-hyp2-ref" > output
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output > "test_results/meteor-ngram-result"
+
+
+python meteor-stem.py -i "data/train-test.hyp1-hyp2-ref" > output
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output > "test_results/meteor-stem-result"
+
+python meteor-wordnet.py -i "data/train-test.hyp1-hyp2-ref" > output
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output > "test_results/meteor-wordnet-result"
+
+python meteor-ngram-stem.py -i "data/train-test.hyp1-hyp2-ref" > output1
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output1
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output1 > "test_results/meteor-ngram-stem-result"
+
+python meteor-ngram-wordnet-stem.py -i "data/train-test.hyp1-hyp2-ref" > output
+python check.py -i "data/train-test.hyp1-hyp2-ref" < output
+python score-evaluation.py -i "data/train-test.hyp1-hyp2-ref" -t "data/train.gold" < output > "test_results/meteor-ngram-wordnet-stem-result"
+
+
+
+python meteor.py > output_meteor
+python check.py < output_meteor
+python score-evaluation.py < output_meteor > "output_tests/meteor-result"
+
+python bleu.py > output_bleu
+python check.py < output_bleu
+python score-evaluation.py < output_bleu > "output_tests/bleu-result"
+
+python meteor-ngram.py > output_meteor_ngram
+python check.py < output_meteor_ngram
+python score-evaluation.py < output_meteor_ngram > "output_tests/meteor-ngram-result"
+
+python meteor-stem.py > output_stem
+python check.py < output_stem
+python score-evaluation.py < output_stem > "output_tests/meteor-stem-result"
+
+python meteor-wordnet.py > output_meteor_wordnet
+python check.py < output_meteor_wordnet
+python score-evaluation.py < output_meteor_wordnet > "output_tests/meteor-wordnet-result"
+
+python meteor-ngram-stem.py > output_ngram_stem
+python check.py < output_ngram_stem
+python score-evaluation.py < output_ngram_stem > "output_tests/meteor-ngram-stem-result"
+
+python meteor-ngram-wordnet-stem.py > output_ngram_wordnet_stem
+python check.py < output_ngram_wordnet_stem
+python score-evaluation.py < output_ngram_wordnet_stem > "output_tests/meteor-ngram-wordnet-stem-result"
+
+
+
+
+
+
+
+
+
+
+
+
+

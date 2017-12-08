@@ -1,4 +1,4 @@
 #!/bin/bash
-python default.py > output
-python check.py < output
-python score-evaluation.py < output
+python default.py > output1
+python check.py < output1
+python score-evaluation.py < output1

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+python meteor-ngram-wordnet-stem.py > test_meteor_3_combined
+python check.py < test_meteor_3_combined
+python score-evaluation.py < test_meteor_3_combined > test_meteor_3_combined_results

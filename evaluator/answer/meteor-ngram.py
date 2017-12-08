@@ -4,9 +4,6 @@ from itertools import islice # slicing for iterators
 import math,sys,copy,nltk
 from nltk.util import ngrams
 
-ALPHA = 0.9
-BETA = 3.0
-GAMMA = 0.3
 
 def word_matches(h,ref,ngram):
 	sum = 0
@@ -129,9 +126,18 @@ def main():
 	parser = argparse.ArgumentParser(description='Evaluate translation hypotheses.')
 	parser.add_argument('-i', '--input', default='data/hyp1-hyp2-ref', help='input file (default data/hyp1-hyp2-ref)')
 	parser.add_argument('-n', '--num_sentences', default=None, type=int, help='Number of hypothesis pairs to evaluate')
+
+	parser.add_argument('-a', '--alpha', default=0.9, type=float, help='Alpha parameter of METEOR')
+	parser.add_argument('-b', '--beta', default=3.0, type=float, help='Beta parameter of METEOR')
+	parser.add_argument('-g', '--gamma', default=0.5, type=float, help='Gamma parameter of METEOR')
 	# note that if x == [1, 2, 3], then x[:None] == x[:] == x (copy); no need for sys.maxint
+	
 	opts = parser.parse_args()
- 
+ 	
+	ALPHA = opts.alpha
+	BETA = opts.beta
+	GAMMA = opts.gamma
+
     # we create a generator and avoid loading all sentences into a list
 	def sentences():
 		with open(opts.input) as f:
