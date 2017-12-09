@@ -1,59 +1,53 @@
 #!/usr/bin/env python
 import argparse # optparse is deprecated
 from itertools import islice # slicing for iterators
-import math,sys,copy,nltk
-from nltk.util import ngrams
+import math, sys, copy
+from nltk.corpus import wordnet
 
-ALPHA = 0.5
-BETA = 3.0
+#ALPHA = 0.9
+#BETA = 3.0
+#GAMMA = 0.5
+
+
+ALPHA = 0.8
+BETA = 0.5
 GAMMA = 0.3
 
-def word_matches(h,ref,ngram):
+
+def word_matches(h,ref):
 	sum = 0
 	temp_ref = copy.deepcopy(ref)
-	temp_h = copy.deepcopy(h)
-	if ngram > 1:
-		temp_h = ngrams(temp_h,ngram)
-		temp_ref = ngrams(temp_ref,ngram)
-
-	new_h = []
-	new_ref = []
-	for i in temp_h:
-		new_h += [i]
-	for j in temp_ref:
-		new_ref += [j]
-
-	for i in new_h	:
-		if i in new_ref:
-			new_ref.remove(i)
+	for i in h:
+		if i in temp_ref:
+			temp_ref.remove(i)
 			sum += 1.0
 	return sum
 
-
-def precision(test,ref,ngram):
-	length = float(len(test) - ngram + 1)
-	x = word_matches(test,ref,ngram)
+def precision(test,ref):
+	length = float(len(test))
+	x = word_matches(test,ref)
 	if length == 0:
 		return 0
+
 	return x/length
 
-def recall(test,ref,ngram):
-	length = float(len(ref) - ngram + 1)
-	x = word_matches(test,ref, ngram)
+def recall(test,ref):
+	length = float(len(ref))
+	x = word_matches(test,ref)
 	if length == 0:
-		return 0
+		return 0	
 	return x/length
 
-def F_mean(test, ref,alpha,ngram):
-	p = precision(test,ref,ngram)
-	r = recall(test,ref,ngram)
+def F_mean(test, ref,alpha):
+	p = precision(test,ref)
+	r = recall(test,ref)
 	if ((alpha*p) + ((1-alpha)*r)) == 0:
 		return 0
 	fmean = p*r
 	fmean = fmean/((alpha*p) + ((1-alpha)*r))
 	return fmean
 
-def chunks(test,ref,ngram):
+def chunks(test,ref):
 	sum = 0
 	test_array = copy.deepcopy(test)
 	ref_array = copy.deepcopy(ref)
@@ -62,12 +56,8 @@ def chunks(test,ref,ngram):
 	back_ref_pos = 0
 	back_test_pos = 0
 
-	if ngram > 1:
-		test_array = ngrams(test_array,ngram)
-		ref_array = ngrams(ref_array,ngram)
-
 	traversed = []
-	for i in xrange(0,len(test_array)):
+	for i in xrange(0,len(test)):
 		traversed += [0]
 
 
@@ -101,27 +91,14 @@ def chunks(test,ref,ngram):
 
 
 
-def penalty(test,ref,beta,gamma,ngram):
-	m = word_matches(test,ref,ngram)
-	c = chunks(test,ref,ngram)
+def penalty(test,ref,beta,gamma):
+	m = word_matches(test,ref)
+	c = chunks(test,ref)
 	ch = 0 if m==0 else c/m
 	return (gamma * math.pow(ch, beta))
 
-def score(test,ref,alpha,beta,gamma,ngram):
-	return (1-penalty(test,ref,beta,gamma,ngram))*F_mean(test,ref,alpha,ngram)
-
-def bleu(test,ref):
-	mul = 1
-	for i in xrange(1,5):
-		value = precision(test,ref,i)
-		mul *= value
-	mul= math.pow(mul,1/4)
-
-	pen = [1,len(ref)/len(test)]
-	return min(pen)*mul
-
-
-
+def score(test,ref,alpha,beta,gamma):
+	return (1-penalty(test,ref,beta,gamma))*F_mean(test,ref,alpha)
 
 def main():
 	parser = argparse.ArgumentParser(description='Evaluate translation hypotheses.')
@@ -139,11 +116,8 @@ def main():
     # note: the -n option does not work in the original code
 
 	for h1, h2, ref in islice(sentences(), opts.num_sentences):		
-		#h1_match = bleu(h1,ref)
-		#h2_match = bleu(h2,ref)		
-
-		h1_match = score(h1,ref,ALPHA,BETA,GAMMA,2)
-		h2_match = score(h2,ref,ALPHA, BETA, GAMMA,2)
+		h1_match = score(h1,ref,ALPHA,BETA,GAMMA)
+		h2_match = score(h2,ref,ALPHA, BETA, GAMMA)
 		print(1 if h1_match > h2_match else # \begin{cases}
 			(0 if h1_match == h2_match
 					else -1)) # \end{cases}

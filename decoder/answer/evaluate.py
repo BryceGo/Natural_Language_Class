@@ -1,42 +1,95 @@
 #!/usr/bin/env python
 import argparse # optparse is deprecated
 from itertools import islice # slicing for iterators
-import math, sys, copy
+import math,sys,copy,nltk
+from nltk.util import ngrams
 from nltk.corpus import wordnet
+from nltk.stem.lancaster import LancasterStemmer
+
 
 #ALPHA = 0.5
 #BETA = 3.0
 #GAMMA = 0.3
 
+ALPHA = 0.8
+BETA = 0.5
+GAMMA = 0.3
+
+#This version cannot have more than a unigram (Note)
+def synonym(word):
+	try:
+		syn = wordnet.synsets(word)
+		synonyms = []
+
+		for i in syn:
+			for j in i.lemmas():
+				synonyms += [j.name().encode('ascii')]
+		synonyms = list(set(synonyms))
+	except:
+		return []
+
+	return synonyms
+
+def get_stem(array):
+	stemmer = LancasterStemmer()
+	for i in xrange(0,len(array)):
+		try:
+			array[i] = stemmer.stem(array[i]).encode('ascii')
+		except:
+			continue
+	return array
 
 
-def word_matches(h,ref):
+def word_matches(h,ref,ngram):
 	sum = 0
 	temp_ref = copy.deepcopy(ref)
-	for i in h:
-		if i in temp_ref:
-			temp_ref.remove(i)
+	temp_h = copy.deepcopy(h)
+	new_h = []
+	new_ref = []
+	
+	temp_ref = get_stem(temp_ref)
+	temp_h = get_stem(temp_h)
+
+	if ngram > 1:
+		temp_h = ngrams(temp_h,ngram)
+		temp_ref = ngrams(temp_ref,ngram)
+	
+	for i in temp_h:
+		new_h += [i]
+	for j in temp_ref:
+		new_ref += [j]
+
+	for i in new_h:
+		if i in new_ref:
+			new_ref.remove(i)
 			sum += 1.0
+	
+	for i in new_h:
+		for j in new_ref:
+			if i in synonym(j):
+				sum += 1.0
+				new_ref.remove(j)
+				break
 	return sum
 
-def precision(test,ref):
-	length = float(len(test))
-	x = word_matches(test,ref)
+
+def precision(test,ref,ngram):
+	length = float(len(test) - ngram + 1)
+	x = word_matches(test,ref,ngram)
 	if length == 0:
 		return 0
-
 	return x/length
 
-def recall(test,ref):
-	length = float(len(ref))
-	x = word_matches(test,ref)
+def recall(test,ref,ngram):
+	length = float(len(ref) - ngram + 1)
+	x = word_matches(test,ref, ngram)
 	if length == 0:
-		return 0	
+		return 0
 	return x/length
 
 def F_mean(test, ref,alpha):
-	p = precision(test,ref)
-	r = recall(test,ref)
+	p = precision(test,ref,1)
+	r = recall(test,ref,1)
 	if ((alpha*p) + ((1-alpha)*r)) == 0:
 		return 0
 	fmean = p*r
@@ -51,6 +104,9 @@ def chunks(test,ref):
 	start = True
 	back_ref_pos = 0
 	back_test_pos = 0
+	test_array = get_stem(test_array)
+	ref_array = get_stem(ref_array)
+
 
 	traversed = []
 	for i in xrange(0,len(test)):
@@ -60,7 +116,7 @@ def chunks(test,ref):
 	for iteratei, i in enumerate(ref_array):
 		if i in test_array:
 			for iteratej,j in enumerate(test_array):
-				if i == j:
+				if i == j or (i in synonym(j)):
 					if traversed[iteratej] == 1:
 						continue
 					traversed[iteratej] = 1
@@ -88,7 +144,7 @@ def chunks(test,ref):
 
 
 def penalty(test,ref,beta,gamma):
-	m = word_matches(test,ref)
+	m = word_matches(test,ref,1)
 	c = chunks(test,ref)
 	ch = 0 if m==0 else c/m
 	return (gamma * math.pow(ch, beta))
@@ -96,21 +152,26 @@ def penalty(test,ref,beta,gamma):
 def score(test,ref,alpha,beta,gamma):
 	return (1-penalty(test,ref,beta,gamma))*F_mean(test,ref,alpha)
 
+def bleu(test,ref):
+	mul = 1
+	for i in xrange(1,5):
+		value = precision(test,ref,i)
+		mul *= value
+	mul= math.pow(mul,1/4)
+
+	pen = [1,len(ref)/len(test)]
+	return min(pen)*mul
+
+
+
+
 def main():
 	parser = argparse.ArgumentParser(description='Evaluate translation hypotheses.')
 	parser.add_argument('-i', '--input', default='data/hyp1-hyp2-ref', help='input file (default data/hyp1-hyp2-ref)')
 	parser.add_argument('-n', '--num_sentences', default=None, type=int, help='Number of hypothesis pairs to evaluate')
-
-	parser.add_argument('-a', '--alpha', default=0.5, type=float, help='Alpha parameter of METEOR')
-	parser.add_argument('-b', '--beta', default=3.0, type=float, help='Beta parameter of METEOR')
-	parser.add_argument('-g', '--gamma', default=0.3, type=float, help='Gamma parameter of METEOR')
 	# note that if x == [1, 2, 3], then x[:None] == x[:] == x (copy); no need for sys.maxint
-	
 	opts = parser.parse_args()
- 	
-	ALPHA = opts.alpha
-	BETA = opts.beta
-	GAMMA = opts.gamma
+ 
     # we create a generator and avoid loading all sentences into a list
 	def sentences():
 		with open(opts.input) as f:
@@ -120,6 +181,7 @@ def main():
     # note: the -n option does not work in the original code
 
 	for h1, h2, ref in islice(sentences(), opts.num_sentences):		
+		
 		h1_match = score(h1,ref,ALPHA,BETA,GAMMA)
 		h2_match = score(h2,ref,ALPHA, BETA, GAMMA)
 		print(1 if h1_match > h2_match else # \begin{cases}
